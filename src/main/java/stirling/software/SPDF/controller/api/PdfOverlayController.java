@@ -99,18 +99,18 @@ public class PdfOverlayController {
     }
 
     private Map<Integer, String> prepareOverlayGuide(
-            int basePageCount, File[] overlayFiles, String mode, int[] counts, List<File> tempFiles)
+            OverlayParameters params)
             throws IOException {
         Map<Integer, String> overlayGuide = new HashMap<>();
-        switch (mode) {
+        switch (params.getMode()) {
             case "SequentialOverlay":
-                sequentialOverlay(overlayGuide, overlayFiles, basePageCount, tempFiles);
+                sequentialOverlay(overlayGuide, params);
                 break;
             case "InterleavedOverlay":
-                interleavedOverlay(overlayGuide, overlayFiles, basePageCount);
+                interleavedOverlay(overlayGuide, params);
                 break;
             case "FixedRepeatOverlay":
-                fixedRepeatOverlay(overlayGuide, overlayFiles, counts, basePageCount);
+                fixedRepeatOverlay(overlayGuide, params);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid overlay mode");
@@ -120,12 +120,13 @@ public class PdfOverlayController {
 
     private void sequentialOverlay(
             Map<Integer, String> overlayGuide,
-            File[] overlayFiles,
-            int basePageCount,
-            List<File> tempFiles)
+            OverlayParameters params)
             throws IOException {
         int overlayFileIndex = 0;
         int pageCountInCurrentOverlay = 0;
+        File[] overlayFiles = params.getOverlayFiles();
+        List<File> tempFiles = params.getTempFiles();
+        int basePageCount = params.getBasePageCount();
 
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             if (pageCountInCurrentOverlay == 0
@@ -157,8 +158,11 @@ public class PdfOverlayController {
     }
 
     private void interleavedOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int basePageCount)
+            Map<Integer, String> overlayGuide, OverlayParameters params)
             throws IOException {
+        File[] overlayFiles = params.getOverlayFiles();
+        int basePageCount = params.getBasePageCount();
+
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];
 
@@ -173,8 +177,12 @@ public class PdfOverlayController {
     }
 
     private void fixedRepeatOverlay(
-            Map<Integer, String> overlayGuide, File[] overlayFiles, int[] counts, int basePageCount)
+            Map<Integer, String> overlayGuide, OverlayParameters params)
             throws IOException {
+        File[] overlayFiles = params.getOverlayFiles();
+        int[] counts = params.getCounts();
+        int basePageCount = params.getBasePageCount();
+
         if (overlayFiles.length != counts.length) {
             throw new IllegalArgumentException(
                     "Counts array length must match the number of overlay files");
